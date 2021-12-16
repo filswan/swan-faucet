@@ -36,6 +36,7 @@
 #faucet-btn:hover {
   background-color: #0b318f;
   border: 2px solid #0b318f;
+  cursor: pointer;
 }
 
 #faucet-btn:disabled {

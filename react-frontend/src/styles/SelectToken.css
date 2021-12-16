@@ -1,0 +1,31 @@
+.tokens-list {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  padding: 0;
+  gap: 1em;
+}
+
+.tokens-list-item {
+  width: 12em;
+  padding: 1.5rem;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  border: 1px solid lightgrey;
+}
+
+.tokens-list-item-checked {
+  width: 12em;
+  padding: 1.5rem;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+
+  border: 1px solid #a0b3f2;
+  background-color: #f5f7fd;
+}

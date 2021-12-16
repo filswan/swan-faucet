@@ -1,8 +1,10 @@
 import { React, useState } from 'react'
 import axios from 'axios'
-import './Faucet.css'
+import '../styles/Faucet.css'
 import Modal from './Modal'
-import './Modal.css'
+import '../styles/Modal.css'
+
+import SelectTokens from './SelectTokens'
 
 const Faucet = (props) => {
   const web3 = props.web3
@@ -15,8 +17,11 @@ const Faucet = (props) => {
   const [isValidAddress, setIsValidAddress] = useState(false)
   const [inProgress, setInProgress] = useState(false)
   const [isError, setIsError] = useState(false)
+  const [selectedNetwork, setSelectedNetwork] = useState('mumbai')
 
-  // whenever the textfield changes, check if it is valid address, then get MATIC and token balance of address
+  const [selectedTokenAddresses, setSelectedTokenAddresses] = useState([])
+
+  // whenever the textfield changes
   const handleChange = async (e) => {
     const address = e.target.value
     setAccount(address)
@@ -47,7 +52,8 @@ const Faucet = (props) => {
             setTxHash(response.tx_hash)
           }
         } catch (err) {
-          setIsError(true)
+          setShowModal(false)
+          alert('Internal Server Error, please try again later')
         }
       } else {
         setIsError(true)
@@ -76,13 +82,31 @@ const Faucet = (props) => {
     return new Promise((res) => setTimeout(res, delay))
   }
 
+  /*
+  const test = (e) => {
+    e.preventDefault()
+    console.log('network: ', selectedNetwork)
+    console.log(selectedTokenAddresses)
+  }
+  */
+
+  const handleNetworkChange = (e) => {
+    setSelectedNetwork(e.target.value)
+  }
+
   return (
     <form id="faucet">
       <div className="faucet-inputs">
         <div className="faucet-network">
           <div className="network-label">Network</div>
-          <select className="network" name="network">
+          <select
+            className="network"
+            name="network"
+            value={selectedNetwork}
+            onChange={handleNetworkChange}
+          >
             <option value="mumbai">Polygon Mumbai</option>
+            <option value="rinkeby">Ethereum Rinkeby</option>
           </select>
         </div>
 
@@ -107,6 +131,16 @@ const Faucet = (props) => {
           )}
         </div>
       </div>
+
+      <SelectTokens
+        setSelectedTokenAddresses={setSelectedTokenAddresses}
+        network={selectedNetwork}
+      />
+
+      {
+        //<button onClick={(e) => test(e)}>TEST</button>
+      }
+
       <button
         id="faucet-btn"
         disabled={showModal}

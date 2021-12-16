@@ -1,4 +1,4 @@
-import './Modal.css'
+import '../styles/Modal.css'
 
 const Modal = ({ handleClose, show, inProgress, hash, isError }) => {
   const showHideClassName = show ? 'modal display-block' : 'modal display-none'
