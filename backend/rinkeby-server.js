@@ -4,12 +4,10 @@ const cors = require('cors')
 const Web3 = require('web3')
 require('dotenv').config()
 
-const web3 = new Web3(
-  process.env.RPC_URL || 'https://matic-mumbai.chainstacklabs.com',
-)
+const web3 = new Web3(process.env.RPC_URL_RINKEBY)
 
 // ENVIRONMENT VARIABLES
-const port = process.env.PORT || 5000
+const port = process.env.PORT_RINKEBY || 6000
 const walletAddress = process.env.WALLET_ADDRESS
 const privateKey = process.env.PRIVATE_KEY
 
@@ -41,12 +39,17 @@ app.use(cors())
 
 app.post('/', async (req, res) => {
   const toAddress = req.body.account
-
   const checkSumAddress = await web3.utils.toChecksumAddress(toAddress)
+  const tokenAmounts = req.body.amounts
+  const tokenAddresses = await Promise.all(
+    req.body.tokens.map(
+      async (tokenAddress) => await web3.utils.toChecksumAddress(tokenAddress),
+    ),
+  )
 
   try {
     const transaction = await faucetContract.methods
-      .sendTokensTo(checkSumAddress)
+      .sendMultiToken(tokenAddresses, tokenAmounts, checkSumAddress)
       .send({ gas: 9999999 })
 
     console.log(transaction.transactionHash)
