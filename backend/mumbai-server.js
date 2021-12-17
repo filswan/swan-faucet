@@ -15,7 +15,8 @@ const privateKey = process.env.PRIVATE_KEY
 
 web3.eth.accounts.wallet.add(privateKey) // adds account using private key
 
-const faucetAddress = '0x099e67a3f29B16C6FFCC621f3c7Ddf64eAfBf632'
+//const faucetAddress = '0x099e67a3f29B16C6FFCC621f3c7Ddf64eAfBf632'
+const faucetAddress = '0x12cad090BcBb3B0364A29F628c29531D9738237e'
 const faucetInterface = [
   {
     inputs: [
@@ -51,7 +52,7 @@ app.post('/', async (req, res) => {
 
   try {
     const transaction = await faucetContract.methods
-      .sendMultiToken(tokenAddresses, tokenAmounts, checkSumAddress)
+      .sendMultiTokens(tokenAddresses, tokenAmounts, checkSumAddress)
       .send({ gas: 9999999 })
 
     console.log(transaction.transactionHash)
