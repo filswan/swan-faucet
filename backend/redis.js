@@ -1,6 +1,8 @@
+require('dotenv').config()
+
 const Redis = require('ioredis')
 const redis = new Redis({
-  host: 'redis',
+  host: process.env.REDIS_HOST,
   port: 6379,
 })
 

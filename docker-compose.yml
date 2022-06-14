@@ -8,6 +8,8 @@ services:
       - redis
     env_file:
       - backend/.env
+    environment:
+      - REDIS_HOST=redis
     ports:
       - "5000:5000"
   vue-frontend:
