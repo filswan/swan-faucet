@@ -176,9 +176,12 @@ app.post('/', verifyCode, limiter, async (req, res) => {
 
   if (eligibleTokens.length > 0) {
     try {
+      const gasPrice = await web3.eth.getGasPrice()
+      console.log(gasPrice)
+
       const transaction = await faucetContract.methods
         .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
-        .send({ gas: 9999999 })
+        .send({ gas: 9999999, gasPrice })
 
       const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
       const requests = await redis.incr(ip)
