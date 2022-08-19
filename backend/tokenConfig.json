@@ -8,5 +8,11 @@
     "tokenAddress": "0xe11A86849d99F524cAC3E7A0Ec1241828e332C62",
     "maxAmount": "100000000000000000000",
     "name": "USDC"
+  },
+  {
+    "network": "tbnc",
+    "tokenAddress": "0x28fC65CF1F2bDe09ab2876fddaA7788340bAf1D7",
+    "maxAmount": "100000000000000000000",
+    "name": "USDC"
   }
 ]

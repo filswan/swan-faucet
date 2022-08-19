@@ -9,17 +9,25 @@ const redis = require('./redis')
 
 require('dotenv').config()
 
-const web3 = new Web3(
-  process.env.RPC_URL || 'https://matic-mumbai.chainstacklabs.com',
-)
+const web3 = {
+  mumbai: new Web3(
+    process.env.RPC_URL_MUMBAI || 'https://matic-mumbai.chainstacklabs.com',
+  ),
+  tbnc: new Web3(process.env.RPC_URL_BINANCE_TESTNET),
+}
 
 // ENVIRONMENT VARIABLES
 const port = process.env.PORT || 5000
 const walletAddress = process.env.WALLET_ADDRESS
 const privateKey = process.env.PRIVATE_KEY
-const faucetAddress = process.env.FAUCET_ADDRESS
 
-web3.eth.accounts.wallet.add(privateKey) // adds account using private key
+const faucetAddress = {
+  mumbai: process.env.FAUCET_ADDRESS_MUMBAI,
+  tbnc: process.env.FAUCET_ADDRESS_BINANCE_TESTNET,
+}
+
+web3.mumbai.eth.accounts.wallet.add(privateKey) // adds account using private key
+web3.tbnc.eth.accounts.wallet.add(privateKey) // adds account using private key
 
 const faucetInterface = [
   {
@@ -74,9 +82,14 @@ const tokenInterface = [
     type: 'function',
   },
 ]
-const faucetContract = new web3.eth.Contract(faucetInterface, faucetAddress, {
-  from: walletAddress,
-})
+const faucetContract = {
+  mumbai: new web3.mumbai.eth.Contract(faucetInterface, faucetAddress.mumbai, {
+    from: walletAddress,
+  }),
+  tbnc: new web3.tbnc.eth.Contract(faucetInterface, faucetAddress.tbnc, {
+    from: walletAddress,
+  }),
+}
 
 let app = express()
 app.use(
@@ -158,12 +171,14 @@ app.get('/code', function (req, res) {
 })
 
 app.post('/', verifyCode, limiter, async (req, res) => {
+  const network = req.body.network
   const toAddress = req.body.account
-  const checkSumAddress = await web3.utils.toChecksumAddress(toAddress)
+  const checkSumAddress = await web3.mumbai.utils.toChecksumAddress(toAddress)
   const tokenAmounts = req.body.amounts
   const tokenAddresses = await Promise.all(
     req.body.tokens.map(
-      async (tokenAddress) => await web3.utils.toChecksumAddress(tokenAddress),
+      async (tokenAddress) =>
+        await web3.mumbai.utils.toChecksumAddress(tokenAddress),
     ),
   )
 
@@ -172,14 +187,19 @@ app.post('/', verifyCode, limiter, async (req, res) => {
     faucetStatus,
     eligibleTokens,
     eligibleAmounts,
-  } = await checkFaucetStatus(tokenAddresses, tokenAmounts, checkSumAddress)
+  } = await checkFaucetStatus(
+    network,
+    tokenAddresses,
+    tokenAmounts,
+    checkSumAddress,
+  )
 
   if (eligibleTokens.length > 0) {
     try {
-      const gasPrice = await web3.eth.getGasPrice()
+      const gasPrice = await web3[network].eth.getGasPrice()
       console.log(gasPrice)
 
-      const transaction = await faucetContract.methods
+      const transaction = await faucetContract[network].methods
         .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
         .send({ gas: 9999999, gasPrice })
 
@@ -205,12 +225,17 @@ app.listen(port, () => {
 })
 
 // return object { status, eligibleTokens, eligibleAmounts }
-const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
+const checkFaucetStatus = async (
+  network,
+  tokenAddresses,
+  tokenAmounts,
+  address,
+) => {
   let faucetStatus = []
   let eligibleTokens = []
   let eligibleAmounts = []
 
-  const allowedToWithdraw = await faucetContract.methods
+  const allowedToWithdraw = await faucetContract[network].methods
     .allowedToWithdraw(address)
     .call()
 
@@ -225,29 +250,35 @@ const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
       let addressStatus = { address: tokenAddresses[i], result: 0 }
 
       // get faucet balance
-      if (tokenAddresses[i] == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE') {
-        faucetBalance = await web3.eth.getBalance(faucetAddress) // get MATIC balance
+      if (
+        network == 'mumbai' &&
+        tokenAddresses[i] == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
+      ) {
+        faucetBalance = await web3.mumbai.eth.getBalance(faucetAddress[network]) // get MATIC balance
       } else {
-        let tokenContract = new web3.eth.Contract(
+        let tokenContract = new web3[network].eth.Contract(
           tokenInterface,
           tokenAddresses[i],
         )
         faucetBalance = await tokenContract.methods
-          .balanceOf(faucetAddress)
+          .balanceOf(faucetAddress[network])
           .call()
       }
 
       // get token max amount
-      const tokenObject = tokenConfig.filter((tokenObject) => {
-        return tokenObject.tokenAddress == tokenAddresses[i]
-      })[0]
+      const tokenObject =
+        tokenConfig.filter((tokenObject) => {
+          return tokenObject.tokenAddress == tokenAddresses[i]
+        })[0] || 0
 
       // if there is an err (tokenAmount too large, not enough token balance) set err message
       if (
-        web3.utils.toBN(faucetBalance).lt(web3.utils.toBN(tokenAmounts[i])) ||
-        web3.utils
+        web3.mumbai.utils
+          .toBN(faucetBalance)
+          .lt(web3.mumbai.utils.toBN(tokenAmounts[i])) ||
+        web3.mumbai.utils
           .toBN(tokenAmounts[i])
-          .gt(web3.utils.toBN(tokenObject.maxAmount))
+          .gt(web3.mumbai.utils.toBN(tokenObject.maxAmount))
       ) {
         // change the token status
         addressStatus.result = -1
@@ -255,9 +286,9 @@ const checkFaucetStatus = async (tokenAddresses, tokenAmounts, address) => {
 
         // change err message if token amount is too large
         if (
-          web3.utils
+          web3.mumbai.utils
             .toBN(tokenAmounts[i])
-            .gt(web3.utils.toBN(tokenObject.maxAmount))
+            .gt(web3.mumbai.utils.toBN(tokenObject.maxAmount))
         )
           addressStatus.err = 'exceeding maximum amount'
       } else {
