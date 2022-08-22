@@ -17,6 +17,7 @@ const web3 = {
 }
 
 // ENVIRONMENT VARIABLES
+const NATIVE_TOKEN = '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
 const port = process.env.PORT || 5000
 const walletAddress = process.env.WALLET_ADDRESS
 const privateKey = process.env.PRIVATE_KEY
@@ -250,11 +251,10 @@ const checkFaucetStatus = async (
       let addressStatus = { address: tokenAddresses[i], result: 0 }
 
       // get faucet balance
-      if (
-        network == 'mumbai' &&
-        tokenAddresses[i] == '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE'
-      ) {
-        faucetBalance = await web3.mumbai.eth.getBalance(faucetAddress[network]) // get MATIC balance
+      if (tokenAddresses[i] == NATIVE_TOKEN) {
+        faucetBalance = await web3[network].eth.getBalance(
+          faucetAddress[network],
+        )
       } else {
         let tokenContract = new web3[network].eth.Contract(
           tokenInterface,
@@ -268,7 +268,10 @@ const checkFaucetStatus = async (
       // get token max amount
       const tokenObject =
         tokenConfig.filter((tokenObject) => {
-          return tokenObject.tokenAddress == tokenAddresses[i]
+          return (
+            tokenObject.tokenAddress == tokenAddresses[i] &&
+            tokenObject.network == network
+          )
         })[0] || 0
 
       // if there is an err (tokenAmount too large, not enough token balance) set err message
