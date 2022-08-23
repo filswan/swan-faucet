@@ -354,11 +354,6 @@ export default {
                 _this.ethChange()
             })
             .catch((error) => {
-                if (error === "User rejected provider access") {
-                } else {
-                    alert("Please unlock MetaMask and switch to the correct network.");
-                    return false
-                }
                 console.error(
                     `Error fetching accounts: ${error.message}.
                     Code: ${error.code}. Data: ${error.data}`
@@ -368,13 +363,11 @@ export default {
         fn() {
             let _this = this
             ethereum.on("accountsChanged", function(account) {
-                console.log('account header:', account[0]);  //Once the account is switched, it will be executed here
+                // console.log('account header:', account[0]);  //Once the account is switched, it will be executed here
                 _this.ruleForm.address = account[0]
                 _this.ethChange()
             });
-            // networkChanged
             ethereum.on("chainChanged", function(accounts) { });
-            // 监听metamask网络断开
             ethereum.on('disconnect', (code, reason) => {
                 // console.log(`Ethereum Provider connection closed: ${reason}. Code: ${code}`);
             });
