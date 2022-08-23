@@ -174,12 +174,12 @@ app.get('/code', function (req, res) {
 app.post('/', verifyCode, limiter, async (req, res) => {
   const network = req.body.network
   const toAddress = req.body.account
-  const checkSumAddress = await web3.mumbai.utils.toChecksumAddress(toAddress)
+  const checkSumAddress = await web3[network].utils.toChecksumAddress(toAddress)
   const tokenAmounts = req.body.amounts
   const tokenAddresses = await Promise.all(
     req.body.tokens.map(
       async (tokenAddress) =>
-        await web3.mumbai.utils.toChecksumAddress(tokenAddress),
+        await web3[network].utils.toChecksumAddress(tokenAddress),
     ),
   )
 
@@ -276,12 +276,12 @@ const checkFaucetStatus = async (
 
       // if there is an err (tokenAmount too large, not enough token balance) set err message
       if (
-        web3.mumbai.utils
+        web3[network].utils
           .toBN(faucetBalance)
-          .lt(web3.mumbai.utils.toBN(tokenAmounts[i])) ||
-        web3.mumbai.utils
+          .lt(web3[network].utils.toBN(tokenAmounts[i])) ||
+        web3[network].utils
           .toBN(tokenAmounts[i])
-          .gt(web3.mumbai.utils.toBN(tokenObject.maxAmount))
+          .gt(web3[network].utils.toBN(tokenObject.maxAmount))
       ) {
         // change the token status
         addressStatus.result = -1
@@ -289,9 +289,9 @@ const checkFaucetStatus = async (
 
         // change err message if token amount is too large
         if (
-          web3.mumbai.utils
+          web3[network].utils
             .toBN(tokenAmounts[i])
-            .gt(web3.mumbai.utils.toBN(tokenObject.maxAmount))
+            .gt(web3[network].utils.toBN(tokenObject.maxAmount))
         )
           addressStatus.err = 'exceeding maximum amount'
       } else {
