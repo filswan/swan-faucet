@@ -127,25 +127,28 @@ const verifyCode = async (req, res, next) => {
 // add 24 hour rate limit
 const limiter = async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const requests = await redis.get(ip)
+  const network = req.body.network
+  const requests = await redis.get(ip + network)
   if (requests >= 1) {
     res.status(429).send('rate limit exceeded')
   } else next()
 }
 // ****************************************************************
-
+// get time remaining
 app.get('/ttl', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const ttl = await redis.ttl(ip)
+  const network = req.body.network
+  const ttl = await redis.ttl(ip + network)
   res.status(200).send({ ip, ttl })
 })
 
 app.get('/req', limiter, async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const requests = await redis.incr(ip)
+  const network = req.body.network
+  const requests = await redis.incr(ip + network)
 
   if (requests === 1) {
-    await redis.expire(ip, 20)
+    await redis.expire(ip + network, 20)
   }
 
   res.status(200).send({ ip, requests })
@@ -174,12 +177,12 @@ app.get('/code', function (req, res) {
 app.post('/', verifyCode, limiter, async (req, res) => {
   const network = req.body.network
   const toAddress = req.body.account
-  const checkSumAddress = await web3.mumbai.utils.toChecksumAddress(toAddress)
+  const checkSumAddress = await web3[network].utils.toChecksumAddress(toAddress)
   const tokenAmounts = req.body.amounts
   const tokenAddresses = await Promise.all(
     req.body.tokens.map(
       async (tokenAddress) =>
-        await web3.mumbai.utils.toChecksumAddress(tokenAddress),
+        await web3[network].utils.toChecksumAddress(tokenAddress),
     ),
   )
 
@@ -198,17 +201,17 @@ app.post('/', verifyCode, limiter, async (req, res) => {
   if (eligibleTokens.length > 0) {
     try {
       const gasPrice = await web3[network].eth.getGasPrice()
-      console.log(gasPrice)
+      //console.log(gasPrice)
 
       const transaction = await faucetContract[network].methods
         .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
         .send({ gas: 9999999, gasPrice })
 
       const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-      const requests = await redis.incr(ip)
+      const requests = await redis.incr(ip + network)
 
       if (requests === 1) {
-        await redis.expire(ip, 60 * 60 * 24)
+        await redis.expire(ip + network, 60 * 60 * 24)
       }
 
       console.log(transaction.transactionHash)
@@ -276,12 +279,12 @@ const checkFaucetStatus = async (
 
       // if there is an err (tokenAmount too large, not enough token balance) set err message
       if (
-        web3.mumbai.utils
+        web3[network].utils
           .toBN(faucetBalance)
-          .lt(web3.mumbai.utils.toBN(tokenAmounts[i])) ||
-        web3.mumbai.utils
+          .lt(web3[network].utils.toBN(tokenAmounts[i])) ||
+        web3[network].utils
           .toBN(tokenAmounts[i])
-          .gt(web3.mumbai.utils.toBN(tokenObject.maxAmount))
+          .gt(web3[network].utils.toBN(tokenObject.maxAmount))
       ) {
         // change the token status
         addressStatus.result = -1
@@ -289,9 +292,9 @@ const checkFaucetStatus = async (
 
         // change err message if token amount is too large
         if (
-          web3.mumbai.utils
+          web3[network].utils
             .toBN(tokenAmounts[i])
-            .gt(web3.mumbai.utils.toBN(tokenObject.maxAmount))
+            .gt(web3[network].utils.toBN(tokenObject.maxAmount))
         )
           addressStatus.err = 'exceeding maximum amount'
       } else {
