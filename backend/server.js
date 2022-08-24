@@ -127,25 +127,28 @@ const verifyCode = async (req, res, next) => {
 // add 24 hour rate limit
 const limiter = async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const requests = await redis.get(ip)
+  const network = req.body.network
+  const requests = await redis.get(ip + network)
   if (requests >= 1) {
     res.status(429).send('rate limit exceeded')
   } else next()
 }
 // ****************************************************************
-
+// get time remaining
 app.get('/ttl', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const ttl = await redis.ttl(ip)
+  const network = req.body.network
+  const ttl = await redis.ttl(ip + network)
   res.status(200).send({ ip, ttl })
 })
 
 app.get('/req', limiter, async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const requests = await redis.incr(ip)
+  const network = req.body.network
+  const requests = await redis.incr(ip + network)
 
   if (requests === 1) {
-    await redis.expire(ip, 20)
+    await redis.expire(ip + network, 20)
   }
 
   res.status(200).send({ ip, requests })
@@ -198,17 +201,17 @@ app.post('/', verifyCode, limiter, async (req, res) => {
   if (eligibleTokens.length > 0) {
     try {
       const gasPrice = await web3[network].eth.getGasPrice()
-      console.log(gasPrice)
+      //console.log(gasPrice)
 
       const transaction = await faucetContract[network].methods
         .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
         .send({ gas: 9999999, gasPrice })
 
       const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-      const requests = await redis.incr(ip)
+      const requests = await redis.incr(ip + network)
 
       if (requests === 1) {
-        await redis.expire(ip, 60 * 60 * 24)
+        await redis.expire(ip + network, 60 * 60 * 24)
       }
 
       console.log(transaction.transactionHash)
