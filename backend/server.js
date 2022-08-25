@@ -138,9 +138,9 @@ const limiter = async (req, res, next) => {
 }
 // ****************************************************************
 // get time remaining
-app.get('/ttl', async (req, res, next) => {
+app.get('/ttl/:network', async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-  const network = req.body.network
+  const network = req.params.network
   const ttl = await redis.ttl(ip + network)
   res.status(200).send({ ip, ttl })
 })
