@@ -3,17 +3,23 @@
         <div class="breadth">
             <div class="top">
                 <h1>Request testnet USDC</h1>
-                <div class="desc">Get testnet USDC for an account on the supported blockchain testnet <b>Polygon Mumbai</b> so you can create and test your own oracle and Chainlinked smart contract.</div>
+                <div class="desc">Get testnet USDC for an account on the supported blockchain testnet <b>Polygon Mumbai</b> and <b>BSC Testnet</b> so you can create and test your own oracle and Chainlinked smart contract.</div>
                 <a href="https://docs.filswan.com/development-resource/swan-token-contract/acquire-testnet-usdc" target="_blank">Learn more</a>
             </div>
             <div class="formTx">
                 <el-form :inline="true" :model="ruleForm" class="demo-form-inline" @submit.native.prevent>
                     <el-form-item label="Network">
-                        <el-select v-model="ruleForm.asset" placeholder="" >
+                        <el-select v-model="ruleForm.asset" placeholder="">
                             <el-option label="Polygon Mumbai" value="Mumbai">
                                 <template slot="label">
                                     <img src="https://smartcontract.imgix.net/icons/polygon.svg?auto=compress%2Cformat" />
                                     Polygon Mumbai
+                                </template>
+                            </el-option>
+                            <el-option label="BSC Testnet" value="BSC">
+                                <template slot="label">
+                                    <img src="https://smartcontract.imgix.net/icons/polygon.svg?auto=compress%2Cformat" />
+                                    BSC Testnet 
                                 </template>
                             </el-option>
                         </el-select>
@@ -22,14 +28,15 @@
                         <el-input :class="{'inputTip':ruleForm.address_tip, 'input': 1==1}" v-model="ruleForm.address" placeholder="Ex: 0xA878795d2C93985444f1e2A077FA324d59C759b0" clearable @clear="ethChange" @input="ethChange"></el-input>
                         <p v-if="ruleForm.address_tip" class="tipStyle"><i class="el-icon-warning"></i> Please enter a valid ethereum address.</p>
                         <p v-if="ruleForm.amount_tip" class="amountStyle">
-                            USDC balance: {{ruleForm.usdcBalance}} USDC
+                            USDC balance: {{ruleForm.asset == 'Mumbai'?ruleForm.usdcBalance:ruleForm.usdcBSCBalance}} USDC
                             <br />
-                            MATIC balance: {{ruleForm.maticBalance}} MATIC
+                            {{ruleForm.asset == 'Mumbai'?`MATIC balance: ${ruleForm.maticBalance} MATIC`:`BNB balance: ${ruleForm.bscBalance} BNB`}}
                         </p>
                     </el-form-item>
                     <el-form-item label="Request type">
                         <el-checkbox-group v-model="ruleForm.checkedRequestType">
-                            <el-checkbox v-for="amount in ruleForm.contract_amount" :label="amount.token" :key="amount.token" border disabled>{{amount.labal}}</el-checkbox>
+                            <el-checkbox :label="ruleForm.contract_amount[0].token" border disabled>{{ruleForm.contract_amount[0].labal}}</el-checkbox>
+                            <el-checkbox v-if="ruleForm.asset == 'Mumbai'" :label="ruleForm.contract_amount[1].token" border disabled>{{ruleForm.contract_amount[1].labal}}</el-checkbox>
                         </el-checkbox-group>
                     </el-form-item>
                     <el-form-item label="Verification Code">
@@ -51,8 +58,11 @@
 
                 <div class="need">
                     <img src="@/assets/images/Help.svg" />
-                    <p class="Box-sc-1vpmd2a-0 Text-sc-9ymwu5-0 ecbXGb">
+                    <p v-if="ruleForm.asset == 'Mumbai'" class="Box-sc-1vpmd2a-0 Text-sc-9ymwu5-0 ecbXGb">
                         Need more testnet MATIC? Get MATIC from <a href="https://faucet.matic.network/" rel="noopener noreferrer" target="_blank">Polygon Mumbai Faucet</a>
+                    </p>
+                    <p v-else class="Box-sc-1vpmd2a-0 Text-sc-9ymwu5-0 ecbXGb">
+                        Need testnet BNB? Get BNB from <a href="https://testnet.binance.org/faucet-smart" rel="noopener noreferrer" target="_blank">Binance Smart Chain Faucet</a>
                     </p>
                 </div>
             </div>
@@ -73,7 +83,7 @@
             </el-steps>
             <div class="trans_cont" v-if="active == 1">
                 <h1>Transaction initiated</h1>
-                <h4>Sending 100 testnet USDC and 0.05 testnet MATIC to your account, please wait a moment.</h4>
+                <h4>Sending 100 testnet USDC <span v-if="ruleForm.asset == 'Mumbai'">and 0.05 testnet MATIC</span> to your account, please wait a moment.</h4>
             </div>
             <div class="trans_cont" v-else-if="active == 2">
                 <h1>Waiting for confirmation</h1>
@@ -84,7 +94,7 @@
                         Transaction hash
                     </div>
                     <div>
-                        <span>100 testnet USDC <br /> 0.05 testnet MATIC</span>
+                        <span>100 testnet USDC <br /> <b v-if="ruleForm.asset == 'Mumbai'" style="font-weight: normal;">0.05 testnet MATIC</b></span>
                         <a :href="'https://mumbai.polygonscan.com/tx/'+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
                     </div>
                 </div>
@@ -98,7 +108,7 @@
                         Transaction hash
                     </div>
                     <div>
-                        <span>100 testnet USDC <br /> 0.05 testnet MATIC</span>
+                        <span>100 testnet USDC <br />  <b v-if="ruleForm.asset == 'Mumbai'" style="font-weight: normal;">0.05 testnet MATIC</b></span>
                         <a :href="'https://mumbai.polygonscan.com/tx/'+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
                     </div>
                 </div>
@@ -142,6 +152,8 @@ export default {
                 amount_tip: false,
                 maticBalance: '',
                 usdcBalance: '',
+                bscBalance: '',
+                usdcBSCBalance: '',
                 checkedRequestType: ['USDC', 'MATIC'],
                 contract_amount: [{
                     labal: '100 test USDC',
@@ -171,23 +183,28 @@ export default {
     },
     mounted() {
         _this = this
+        _this.init()
     },
     methods: {
         async onSubmit() {
             _this.responseErr = []
             _this.tx_hash = ''
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
-                const allowedToWithdraw = await _this.$faucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call()
+                const allowedToWithdraw = _this.ruleForm.asset == 'Mumbai' ? 
+                    await _this.$faucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call() :
+                    await _this.$bscFaucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call()
     
                 if (allowedToWithdraw) {
                     try {
                         // send request for tokens
                         const paramsObject = {
+                            network: _this.ruleForm.asset == 'Mumbai' ? "mumbai" : "tbnc",
                             account: _this.ruleForm.address, 
-                            tokens: [process.env.TOKEN_ADDRESS, process.env.MATIC_TOKEN_ADDRESS], 
-                            amounts: [_this.$web3.utils.toWei('100', 'ether'), _this.$web3.utils.toWei('0.05', 'ether')],
+                            tokens: _this.ruleForm.asset == 'Mumbai' ? [process.env.TOKEN_ADDRESS, process.env.MATIC_TOKEN_ADDRESS] : [process.env.BSC_TOKEN_ADDRESS], 
+                            amounts: _this.ruleForm.asset == 'Mumbai' ? [_this.$web3.utils.toWei('100', 'ether'), _this.$web3.utils.toWei('0.05', 'ether')] : [_this.$web3.utils.toWei('100', 'ether')],
                             verification_code: _this.ruleForm.verification_code
                         }
+
                         const response = await _this.sendRequest(process.env.BASE_API, paramsObject)
                         //console.log(response)
 
@@ -219,7 +236,7 @@ export default {
                     case 0:
                         if(res.address === process.env.TOKEN_ADDRESS) {
                             currency.push('100 testnet USDC')
-                        }else {
+                        }else if(res.address === process.env.MATIC_TOKEN_ADDRESS) {
                             currency.push('0.05 testnet MATIC')
                         }
                         break;
@@ -266,11 +283,13 @@ export default {
 
                 const tokens = await _this.$tokenContract.methods.balanceOf(_this.ruleForm.address).call()
                 const decimal = await _this.$tokenContract.methods.decimals().call()
-                // console.log('decimal:', decimal)
-                // console.log('usdc:', tokens, _this.$web3.utils.fromWei(tokens, 'ether'))
+                const tokensBsc = await _this.$bscContract.methods.balanceOf(_this.ruleForm.address).call()
+                const maticBSC = await _this.$web3_bsc.eth.getBalance(_this.ruleForm.address)
+                _this.ruleForm.usdcBSCBalance = _this.$web3_bsc.utils.fromWei(tokensBsc, 'ether') || 0
+                _this.ruleForm.bscBalance = _this.$web3_bsc.utils.fromWei(maticBSC, 'ether')
 
                 await _this.formatWithDecimal(tokens, decimal)
-                
+
                 _this.ruleForm.address_tip = false
                 _this.ruleForm.amount_tip = true
             }else if(_this.ruleForm.address == ''){
@@ -328,6 +347,36 @@ export default {
             let time = (new Date()).getTime()
             _this.ruleForm.verification_link = `${process.env.BASE_API}code?_v=${time}`
             _this.ruleForm.verification_loading = false
+        },
+        init() {
+            _this.fn()
+
+            const ethereum = window.ethereum;
+            ethereum
+            .request({ method: 'eth_requestAccounts' })
+            .then((accounts) => {
+                // console.log('accounts', accounts)
+                if(accounts) _this.ruleForm.address = accounts[0]
+                _this.ethChange()
+            })
+            .catch((error) => {
+                console.error(
+                    `Error fetching accounts: ${error.message}.
+                    Code: ${error.code}. Data: ${error.data}`
+                );
+            });
+        },
+        fn() {
+            let _this = this
+            ethereum.on("accountsChanged", function(account) {
+                // console.log('account header:', account[0]);  //Once the account is switched, it will be executed here
+                _this.ruleForm.address = account[0]
+                _this.ethChange()
+            });
+            ethereum.on("chainChanged", function(accounts) { });
+            ethereum.on('disconnect', (code, reason) => {
+                // console.log(`Ethereum Provider connection closed: ${reason}. Code: ${code}`);
+            });
         }
     },
 };
