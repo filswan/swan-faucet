@@ -129,6 +129,9 @@ const limiter = async (req, res, next) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
   const network = req.body.network
   const requests = await redis.get(ip + network)
+
+  console.log(ip + network)
+
   if (requests >= 1) {
     res.status(429).send('rate limit exceeded')
   } else next()
@@ -143,7 +146,7 @@ app.get('/ttl', async (req, res, next) => {
 })
 
 app.get('/version', async (req, res, next) => {
-  res.status(200).send({ version: '1.0.0' })
+  res.status(200).send({ version: '1.0.1' })
 })
 
 app.get('/req', limiter, async (req, res) => {
