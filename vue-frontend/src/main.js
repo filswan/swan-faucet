@@ -87,6 +87,7 @@ const faucetABI = [
 Vue.prototype.$tokenContract = new contractWeb3.eth.Contract(tokenABI, process.env.TOKEN_ADDRESS)
 Vue.prototype.$faucetContract = new contractWeb3.eth.Contract(faucetABI, process.env.FAUCET_ADDRESS)
 Vue.prototype.$bscContract = new contractBSCWeb3.eth.Contract(tokenABI, process.env.BSC_TOKEN_ADDRESS)
+Vue.prototype.$bscFaucetContract = new contractWeb3.eth.Contract(faucetABI, process.env.BSC_FAUCET_ADDRESS)
 
 
 /* eslint-disable no-new */

@@ -190,7 +190,9 @@ export default {
             _this.responseErr = []
             _this.tx_hash = ''
             if (_this.$web3.utils.isAddress(_this.ruleForm.address)) {
-                const allowedToWithdraw = await _this.$faucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call()
+                const allowedToWithdraw = _this.ruleForm.asset == 'Mumbai' ? 
+                    await _this.$faucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call() :
+                    await _this.$bscFaucetContract.methods.allowedToWithdraw(_this.ruleForm.address).call()
     
                 if (allowedToWithdraw) {
                     try {
