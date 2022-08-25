@@ -28,9 +28,9 @@
                         <el-input :class="{'inputTip':ruleForm.address_tip, 'input': 1==1}" v-model="ruleForm.address" placeholder="Ex: 0xA878795d2C93985444f1e2A077FA324d59C759b0" clearable @clear="ethChange" @input="ethChange"></el-input>
                         <p v-if="ruleForm.address_tip" class="tipStyle"><i class="el-icon-warning"></i> Please enter a valid ethereum address.</p>
                         <p v-if="ruleForm.amount_tip" class="amountStyle">
-                            USDC balance: {{ruleForm.usdcBalance}} USDC
+                            USDC balance: {{ruleForm.asset == 'Mumbai'?ruleForm.usdcBalance:ruleForm.usdcBSCBalance}} USDC
                             <br />
-                            MATIC balance: {{ruleForm.maticBalance}} MATIC
+                            {{ruleForm.asset == 'Mumbai'?`MATIC balance: ${ruleForm.maticBalance} MATIC`:`BNB balance: ${ruleForm.bscBalance} BNB`}}
                         </p>
                     </el-form-item>
                     <el-form-item label="Request type">
@@ -152,6 +152,8 @@ export default {
                 amount_tip: false,
                 maticBalance: '',
                 usdcBalance: '',
+                bscBalance: '',
+                usdcBSCBalance: '',
                 checkedRequestType: ['USDC', 'MATIC'],
                 contract_amount: [{
                     labal: '100 test USDC',
@@ -279,11 +281,13 @@ export default {
 
                 const tokens = await _this.$tokenContract.methods.balanceOf(_this.ruleForm.address).call()
                 const decimal = await _this.$tokenContract.methods.decimals().call()
-                // console.log('decimal:', decimal)
-                // console.log('usdc:', tokens, _this.$web3.utils.fromWei(tokens, 'ether'))
+                const tokensBsc = await _this.$bscContract.methods.balanceOf(_this.ruleForm.address).call()
+                const maticBSC = await _this.$web3_bsc.eth.getBalance(_this.ruleForm.address)
+                _this.ruleForm.usdcBSCBalance = _this.$web3_bsc.utils.fromWei(tokensBsc, 'ether') || 0
+                _this.ruleForm.bscBalance = _this.$web3_bsc.utils.fromWei(maticBSC, 'ether')
 
                 await _this.formatWithDecimal(tokens, decimal)
-                
+
                 _this.ruleForm.address_tip = false
                 _this.ruleForm.amount_tip = true
             }else if(_this.ruleForm.address == ''){
