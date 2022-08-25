@@ -142,6 +142,10 @@ app.get('/ttl', async (req, res, next) => {
   res.status(200).send({ ip, ttl })
 })
 
+app.get('/version', async (req, res, next) => {
+  res.status(200).send({ version: '1.0.0' })
+})
+
 app.get('/req', limiter, async (req, res) => {
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
   const network = req.body.network
