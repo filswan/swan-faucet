@@ -25,7 +25,9 @@ Vue.config.productionTip = false
 
 import Web3 from 'web3'
 const contractWeb3 = new Web3(process.env.BASE_NETWORK)
+const contractBSCWeb3 = new Web3(process.env.BASE_NETWORK_BSC)
 Vue.prototype.$web3 = contractWeb3;
+Vue.prototype.$web3_bsc = contractBSCWeb3;
 const tokenABI = [
   {
     "constant": true,
@@ -84,6 +86,7 @@ const faucetABI = [
 ]
 Vue.prototype.$tokenContract = new contractWeb3.eth.Contract(tokenABI, process.env.TOKEN_ADDRESS)
 Vue.prototype.$faucetContract = new contractWeb3.eth.Contract(faucetABI, process.env.FAUCET_ADDRESS)
+Vue.prototype.$bscContract = new contractBSCWeb3.eth.Contract(tokenABI, process.env.BSC_TOKEN_ADDRESS)
 
 
 /* eslint-disable no-new */
