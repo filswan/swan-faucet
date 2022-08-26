@@ -9,5 +9,6 @@ module.exports = {
   BSC_FAUCET_ADDRESS: '"0xA51538054442a8aeA4e2178D3e74cE88c5738DD6"',
   MATIC_TOKEN_ADDRESS: '"0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"',
   BSC_TOKEN_ADDRESS: '"0x28fC65CF1F2bDe09ab2876fddaA7788340bAf1D7"',
-  GOOGLE_KEY: '"6Lehor4dAAAAAHNq6VO5G9MNmPyLDCKoMpBnvRAC"',
+  BASE_POLYGON_ADDRESS: '"https://mumbai.polygonscan.com/tx/"',
+  BASE_BSC_ADDRESS: '"https://testnet.bscscan.com/tx/"'
 }
