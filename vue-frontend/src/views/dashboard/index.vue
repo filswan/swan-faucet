@@ -95,7 +95,7 @@
                     </div>
                     <div>
                         <span>100 testnet USDC <br /> <b v-if="ruleForm.asset == 'Mumbai'" style="font-weight: normal;">0.05 testnet MATIC</b></span>
-                        <a :href="'https://mumbai.polygonscan.com/tx/'+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
+                        <a :href="ruleForm.asset == 'Mumbai'?mumbaiAddressURL+txhash:bscAddressURL+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
                     </div>
                 </div>
             </div>
@@ -109,7 +109,7 @@
                     </div>
                     <div>
                         <span>100 testnet USDC <br />  <b v-if="ruleForm.asset == 'Mumbai'" style="font-weight: normal;">0.05 testnet MATIC</b></span>
-                        <a :href="'https://mumbai.polygonscan.com/tx/'+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
+                        <a :href="ruleForm.asset == 'Mumbai'?mumbaiAddressURL+txhash:bscAddressURL+txhash" rel="noopener noreferrer" target="_blank">{{txhash}}</a>
                     </div>
                 </div>
             </div>
@@ -172,7 +172,9 @@ export default {
             active: 1,
             txhash: '',
             responseErr: [],
-            currencyResults: ''
+            currencyResults: '',
+            bscAddressURL: process.env.BASE_BSC_ADDRESS,
+            mumbaiAddressURL: process.env.BASE_POLYGON_ADDRESS
         };
     },
     components: {},
@@ -318,7 +320,8 @@ export default {
             }
         },
         checkTransaction(txhash) {
-            _this.$web3.eth.getTransactionReceipt(txhash).then(
+            const ethReceipt = _this.ruleForm.asset == 'Mumbai' ? _this.$web3.eth.getTransactionReceipt(txhash):_this.$web3_bsc.eth.getTransactionReceipt(txhash)
+            ethReceipt.then(
                 async (receipt) => {
                     console.log('checking ... ');
                     await _this.timeout(2000)
