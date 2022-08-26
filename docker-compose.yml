@@ -1,12 +1,20 @@
-version: "3.9"
+version: "2.2"
 services:
+  redis:
+    image: 'redis'
   backend:
     build: backend
+    depends_on:
+      - redis
     env_file:
       - backend/.env
+    environment:
+      - REDIS_HOST=redis
     ports:
       - "5000:5000"
   vue-frontend:
     build: vue-frontend
+    depends_on: 
+      - backend
     ports:
       - "8080:8080"
