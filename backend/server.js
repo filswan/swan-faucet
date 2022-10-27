@@ -182,53 +182,60 @@ app.get('/code', function (req, res) {
 })
 
 app.post('/', verifyCode, limiter, async (req, res) => {
-  const network = req.body.network
-  const toAddress = req.body.account
-  const checkSumAddress = await web3[network].utils.toChecksumAddress(toAddress)
-  const tokenAmounts = req.body.amounts
-  const tokenAddresses = await Promise.all(
-    req.body.tokens.map(
-      async (tokenAddress) =>
-        await web3[network].utils.toChecksumAddress(tokenAddress),
-    ),
-  )
+  try {
+    const network = req.body.network
+    const toAddress = req.body.account
+    const checkSumAddress = await web3[network].utils.toChecksumAddress(
+      toAddress,
+    )
+    const tokenAmounts = req.body.amounts
+    const tokenAddresses = await Promise.all(
+      req.body.tokens.map(
+        async (tokenAddress) =>
+          await web3[network].utils.toChecksumAddress(tokenAddress),
+      ),
+    )
 
-  // get faucet balance status, also remove addressese from array
-  const {
-    faucetStatus,
-    eligibleTokens,
-    eligibleAmounts,
-  } = await checkFaucetStatus(
-    network,
-    tokenAddresses,
-    tokenAmounts,
-    checkSumAddress,
-  )
+    // get faucet balance status, also remove addressese from array
+    const {
+      faucetStatus,
+      eligibleTokens,
+      eligibleAmounts,
+    } = await checkFaucetStatus(
+      network,
+      tokenAddresses,
+      tokenAmounts,
+      checkSumAddress,
+    )
 
-  if (eligibleTokens.length > 0) {
-    try {
-      const gasPrice = await web3[network].eth.getGasPrice()
-      //console.log(gasPrice)
+    if (eligibleTokens.length > 0) {
+      try {
+        const gasPrice = await web3[network].eth.getGasPrice()
+        //console.log(gasPrice)
 
-      const transaction = await faucetContract[network].methods
-        .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
-        .send({ gas: 9999999, gasPrice })
+        const transaction = await faucetContract[network].methods
+          .sendMultiTokens(eligibleTokens, eligibleAmounts, checkSumAddress)
+          .send({ gas: 9999999, gasPrice })
 
-      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
-      const requests = await redis.incr(ip + network)
+        const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress
+        const requests = await redis.incr(ip + network)
 
-      if (requests === 1) {
-        await redis.expire(ip + network, 60 * 60 * 24)
+        if (requests === 1) {
+          await redis.expire(ip + network, 60 * 60 * 24)
+        }
+
+        console.log(transaction.transactionHash)
+
+        res.json([...faucetStatus, { tx_hash: transaction.transactionHash }])
+      } catch (err) {
+        console.log(err)
+        res.status(500).json(err)
       }
-
-      console.log(transaction.transactionHash)
-
-      res.json([...faucetStatus, { tx_hash: transaction.transactionHash }])
-    } catch (err) {
-      console.log(err)
-      res.status(500).json(err)
-    }
-  } else res.json(faucetStatus)
+    } else res.json(faucetStatus)
+  } catch (err) {
+    console.log(err)
+    res.status(500).json(err)
+  }
 })
 
 app.listen(port, () => {
@@ -284,29 +291,34 @@ const checkFaucetStatus = async (
           )
         })[0] || 0
 
-      // if there is an err (tokenAmount too large, not enough token balance) set err message
-      if (
-        web3[network].utils
-          .toBN(faucetBalance)
-          .lt(web3[network].utils.toBN(tokenAmounts[i])) ||
-        web3[network].utils
-          .toBN(tokenAmounts[i])
-          .gt(web3[network].utils.toBN(tokenObject.maxAmount))
-      ) {
-        // change the token status
+      if (tokenObject === 0) {
         addressStatus.result = -1
-        addressStatus.err = `running out of ${tokenObject.name} tokens`
-
-        // change err message if token amount is too large
+        addressStatus.err = `This faucet does not support this token: ${tokenAddresses[i]}`
+      } else {
+        // if there is an err (tokenAmount too large, not enough token balance) set err message
         if (
+          web3[network].utils
+            .toBN(faucetBalance)
+            .lt(web3[network].utils.toBN(tokenAmounts[i])) ||
           web3[network].utils
             .toBN(tokenAmounts[i])
             .gt(web3[network].utils.toBN(tokenObject.maxAmount))
-        )
-          addressStatus.err = 'exceeding maximum amount'
-      } else {
-        eligibleTokens.push(tokenAddresses[i])
-        eligibleAmounts.push(tokenAmounts[i])
+        ) {
+          // change the token status
+          addressStatus.result = -1
+          addressStatus.err = `running out of ${tokenObject.name} tokens`
+
+          // change err message if token amount is too large
+          if (
+            web3[network].utils
+              .toBN(tokenAmounts[i])
+              .gt(web3[network].utils.toBN(tokenObject.maxAmount))
+          )
+            addressStatus.err = 'exceeding maximum amount'
+        } else {
+          eligibleTokens.push(tokenAddresses[i])
+          eligibleAmounts.push(tokenAmounts[i])
+        }
       }
 
       faucetStatus.push(addressStatus)
