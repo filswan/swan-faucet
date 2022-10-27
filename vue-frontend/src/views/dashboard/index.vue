@@ -203,7 +203,7 @@ export default {
                             network: _this.ruleForm.asset == 'Mumbai' ? "mumbai" : "tbnc",
                             account: _this.ruleForm.address, 
                             tokens: _this.ruleForm.asset == 'Mumbai' ? [process.env.TOKEN_ADDRESS, process.env.MATIC_TOKEN_ADDRESS] : [process.env.BSC_TOKEN_ADDRESS], 
-                            amounts: _this.ruleForm.asset == 'Mumbai' ? [_this.$web3.utils.toWei('100', 'ether'), _this.$web3.utils.toWei('0.05', 'ether')] : [_this.$web3.utils.toWei('100', 'ether')],
+                            amounts: _this.ruleForm.asset == 'Mumbai' ? [_this.$web3.utils.toWei('100', 'mwei'), _this.$web3.utils.toWei('0.05', 'ether')] : [_this.$web3.utils.toWei('100', 'mwei')],
                             verification_code: _this.ruleForm.verification_code
                         }
 
