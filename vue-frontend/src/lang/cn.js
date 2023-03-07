@@ -1,14 +1,11 @@
 export default {
-  route: {
-  },
-  navbar: {
-  },
+  route: {},
+  navbar: {},
   // 首页
-  dashboard: {
-  },
+  dashboard: {},
   footer: {
-    copy: '© 2022 FilSwan.All Rights reserved. ',
-    privacy: 'Privacy',
+    copy: ' FilSwan.All Rights reserved. ',
+    privacy: 'Privacy'
   }
-  
+
 }
