@@ -1,23 +1,23 @@
 <template>
-    <div :class="{'footer_position': positionStyle, 'footer': 1==1}">
-        <div class="breadth">
-            <div class="footer_all">
-                <div class="left">
-                    <img :src="footer_logo" alt="">
-                    <p>© {{fullYear}}{{$t('footer.copy')}}</p>
-                </div>
-                <div class="icon">
-                    <a href="https://filswan.medium.com/" target="_block"><img :src="share_img1" alt=""></a>
-                    <a href="https://discord.com/invite/KKGhy8ZqzK" target="_block"><img :src="share_img10" alt=""></a>
-                    <a href="https://twitter.com/0xfilswan" target="_block"><img :src="share_img2" alt=""></a>
-                    <a href="https://github.com/filswan" target="_block"><img :src="share_img3" alt=""></a>
-                    <a href="https://t.me/filswan" target="_block"><img :src="share_img9" alt=""></a>
-                    <a href="https://www.linkedin.com/company/swan-cloud-inc/" target="_block"><img :src="share_img6" alt=""></a>
-                </div>
-            </div>
+  <div :class="{'footer_position': positionStyle, 'footer': 1==1}">
+    <div class="breadth">
+      <div class="footer_all">
+        <div class="left">
+          <img :src="footer_logo" alt="">
+          <p>© {{fullYear}}{{$t('footer.copy')}}</p>
         </div>
-        <div id="version">v2.0.10</div>
+        <div class="icon">
+          <a href="https://filswan.medium.com/" target="_block"><img :src="share_img1" alt=""></a>
+          <a href="https://discord.com/invite/KKGhy8ZqzK" target="_block"><img :src="share_img10" alt=""></a>
+          <a href="https://twitter.com/0xfilswan" target="_block"><img :src="share_img2" alt=""></a>
+          <a href="https://github.com/filswan" target="_block"><img :src="share_img3" alt=""></a>
+          <a href="https://t.me/filswan" target="_block"><img :src="share_img9" alt=""></a>
+          <a href="https://www.linkedin.com/company/swan-cloud-inc/" target="_block"><img :src="share_img6" alt=""></a>
+        </div>
+      </div>
     </div>
+    <div id="version">v2.0.10</div>
+  </div>
 </template>
 <script>
 export default {
@@ -30,9 +30,9 @@ export default {
       share_img6: require('@/assets/images/landing/f6.png'),
       share_img9: require('@/assets/images/landing/telegram.png'),
       share_img10: require('@/assets/images/landing/discord.png'),
-      fullYear: 2023
+      fullYear: new Date().getFullYear()
     }
-    },
+  },
   props: ['positionStyle'],
   computed: {
     language () {
@@ -41,9 +41,7 @@ export default {
   },
   methods: {
   },
-  mounted () {
-    this.fullYear = new Date().getFullYear()
-  }
+  mounted () { }
 }
 </script>
 <style  lang="scss" scoped>
